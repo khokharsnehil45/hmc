@@ -611,6 +611,90 @@
       padding-top: 6px;
     }
 
+    /* Documentation Section */
+    .docs-section {
+      margin-bottom: 64px;
+    }
+
+    .docs-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .doc-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: clamp(20px, 3.5vw, 28px);
+      position: relative;
+    }
+
+    .doc-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .doc-step-badge {
+      background: var(--orange);
+      color: #000;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 3px 8px;
+    }
+
+    .doc-title {
+      font-family: var(--font-sans);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .doc-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    .code-box {
+      background: #000;
+      border: 1px solid var(--surface-border);
+      padding: 14px 16px;
+      font-size: clamp(11px, 2.7vw, 13px);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .code-box code {
+      color: #fff;
+      display: block;
+      white-space: pre;
+    }
+
+    .code-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
+    }
+
+    .doc-notes {
+      font-size: 12px;
+      color: var(--text-dim);
+      background: rgba(255, 102, 0, 0.04);
+      border-left: 2px solid var(--orange);
+      padding: 8px 12px;
+    }
+
     /* Command Table */
     .cmd-table-box {
       background: var(--surface);
@@ -714,8 +798,8 @@
       <nav class="nav-links">
         <a href="#features" class="nav-link">Features</a>
         <a href="#architecture" class="nav-link">Architecture</a>
-        <a href="#recipes" class="nav-link">RAG Pipelines</a>
-        <a href="#commands" class="nav-link">Commands</a>
+        <a href="#recipes" class="nav-link">Pipelines</a>
+        <a href="#docs" class="nav-link">Docs</a>
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn" style="padding: 6px 12px; min-height: 32px;">GitHub &nearr;</a>
       </nav>
     </div>
@@ -750,7 +834,7 @@
           <button class="copy-btn" onclick="copyText('cargo install --git https://github.com/khokharsnehil45/hmc', this)">COPY</button>
         </div>
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">★ GitHub Repo</a>
-        <a href="#features" class="btn btn-primary">EXPLORE FEATURES &darr;</a>
+        <a href="#docs" class="btn btn-primary">HOW TO USE &darr;</a>
       </div>
 
       <!-- Hero Terminal Preview -->
@@ -918,10 +1002,169 @@ EOF
     </div>
   </section>
 
-  <!-- Commands Table -->
-  <section id="commands" class="container">
+  <!-- Complete Documentation Guide -->
+  <section id="docs" class="container docs-section">
     <div class="section-title-wrap">
-      <div class="section-pre">// REFERENCE</div>
+      <div class="section-pre">// DOCUMENTATION</div>
+      <h2 class="section-title">How To Use hmc</h2>
+    </div>
+
+    <div class="docs-flow">
+      <!-- Doc 1: Installation -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 01</span>
+          <h3 class="doc-title">Installation & Setup</h3>
+        </div>
+        <p class="doc-desc">
+          Install the binary directly from GitHub using Cargo. Make sure your Rust toolchain is up to date:
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>BASH</span>
+            <button class="copy-btn" onclick="copyText('cargo install --git https://github.com/khokharsnehil45/hmc', this)">COPY</button>
+          </div>
+          <code>cargo install --git https://github.com/khokharsnehil45/hmc</code>
+        </div>
+        <div class="doc-notes">
+          <strong>Tip for Local Embeddings:</strong> If you use Ollama, run <code>ollama pull nomic-embed-text</code>. If Ollama is not installed or running, <code>hmc</code> will automatically use its internal 256-dimensional subword hashing vectorizer with zero configuration.
+        </div>
+      </div>
+
+      <!-- Doc 2: Saving Context -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 02</span>
+          <h3 class="doc-title">Saving Context (Plain vs. Vector)</h3>
+        </div>
+        <p class="doc-desc">
+          Save code, error messages, user preferences, or AI instructions. Use <code>--vec</code> when you want the context to be semantically searchable later.
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>SAVE COMMANDS</span>
+            <button class="copy-btn" onclick="copyText('hmc --save \"PostgreSQL GIN indexing on JSONB\" --vec', this)">COPY</button>
+          </div>
+          <code># 1. Plain save (stored only in contexts table):
+hmc --save "Temporary build configuration notes"
+
+# 2. Vector indexed save (stored in contexts + embeddings table):
+hmc --save "PostgreSQL GIN indexing on JSONB for sub-ms queries" --vec</code>
+        </div>
+        <div class="doc-notes">
+          On save, <code>hmc</code> outputs a unique 8-character hex ID (e.g., <code>5937969c</code>).
+        </div>
+      </div>
+
+      <!-- Doc 3: Retrieving by ID -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 03</span>
+          <h3 class="doc-title">Retrieving Context by ID</h3>
+        </div>
+        <p class="doc-desc">
+          Load exact stored content using the ID provided during saving. Prefix matching allows you to type just the first few characters.
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>LOAD COMMANDS</span>
+            <button class="copy-btn" onclick="copyText('hmc --load 5937969c', this)">COPY</button>
+          </div>
+          <code># Full ID lookup:
+hmc --load 5937969c
+
+# Prefix match lookup (as long as it uniquely identifies the item):
+hmc --load 5937</code>
+        </div>
+        <div class="doc-notes">
+          If the ID matches multiple contexts, <code>hmc</code> alerts you with an ambiguous match error listing the candidates.
+        </div>
+      </div>
+
+      <!-- Doc 4: Semantic Querying -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 04</span>
+          <h3 class="doc-title">Semantic Querying & Top-K Matching</h3>
+        </div>
+        <p class="doc-desc">
+          Query the vector store using natural language. The engine computes cosine similarity across stored vector embeddings and returns the highest-scoring matches.
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>QUERY COMMANDS</span>
+            <button class="copy-btn" onclick="copyText('hmc --query \"fast json queries in sql\" --5', this)">COPY</button>
+          </div>
+          <code># Default top 3 matches:
+hmc --query "database indexes for fast json"
+
+# Shorthand for top 5 matches:
+hmc --query "artificial intelligence and machine learning" --5
+
+# Top 1 best match only:
+hmc --query "sourdough bread hydration" --1</code>
+        </div>
+        <div class="doc-notes">
+          Because of the normalized SQLite architecture, vector calculations scan only compact float byte blobs in memory, fetching raw text strictly for the winning matches.
+        </div>
+      </div>
+
+      <!-- Doc 5: Pipes and Stdin -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 05</span>
+          <h3 class="doc-title">Unix Pipes, Stdin & Redirection</h3>
+        </div>
+        <p class="doc-desc">
+          Integrate <code>hmc</code> into your shell scripts, CI pipelines, and LLM chains.
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>PIPE EXAMPLES</span>
+            <button class="copy-btn" onclick="copyText('cat debug.log | hmc --save - --vec', this)">COPY</button>
+          </div>
+          <code># Pipe command output directly into vector store:
+cat debug.log | hmc --save - --vec
+
+# Pipe retrieved context directly to a markdown file:
+hmc --query "docker networking" --3 > context.md
+
+# Pipe retrieved memory straight into an Ollama prompt:
+hmc --query "rust memory" --1 | ollama run llama3.2 "Explain in simple terms:"</code>
+        </div>
+      </div>
+
+      <!-- Doc 6: Configuration -->
+      <div class="doc-card">
+        <div class="doc-header">
+          <span class="doc-step-badge">DOC 06</span>
+          <h3 class="doc-title">Storage & Environment Variables</h3>
+        </div>
+        <p class="doc-desc">
+          <code>hmc</code> works with zero configuration, but supports environment variable overrides:
+        </p>
+        <div class="code-box">
+          <div class="code-box-header">
+            <span>ENVIRONMENT VARIABLES</span>
+            <button class="copy-btn" onclick="copyText('export HMC_DIR=~/.hmc', this)">COPY</button>
+          </div>
+          <code># Custom storage directory (default: ~/.hmc/hmc.db)
+export HMC_DIR="$HOME/.my_custom_hmc"
+
+# Custom Ollama endpoint (default: http://localhost:11434/api/embeddings)
+export HMC_OLLAMA_URL="http://127.0.0.1:11434/api/embeddings"
+
+# Custom Ollama embedding model (default: nomic-embed-text)
+export HMC_OLLAMA_MODEL="nomic-embed-text"</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commands Table Reference -->
+  <section class="container">
+    <div class="section-title-wrap">
+      <div class="section-pre">// QUICK LOOKUP</div>
       <h2 class="section-title">CLI Command Reference</h2>
     </div>
 
@@ -980,7 +1223,8 @@ EOF
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank">github.com/khokharsnehil45/hmc</a>
         <a href="#features">Features</a>
         <a href="#architecture">Architecture</a>
-        <a href="#commands">Docs</a>
+        <a href="#recipes">Pipelines</a>
+        <a href="#docs">Docs</a>
       </div>
     </div>
   </footer>
