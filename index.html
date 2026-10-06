@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hmc — Hold My Context | Fast Local Vector Store & Agent Memory CLI</title>
+  <meta name="description" content="Hold My Context (hmc): Ultra-fast, local-first CLI tool and vector store written in Rust. Persistent scratchpad and long-term memory for terminal workflows and AI agents.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c0e;
+      --surface: #121316;
+      --surface-raised: #18191d;
+      --surface-border: #26282e;
+      --orange: #ff6600;
+      --orange-light: #ff8533;
+      --orange-dark: #cc5200;
+      --orange-subtle: rgba(255, 102, 0, 0.12);
+      --orange-glow: rgba(255, 102, 0, 0.25);
+      --text: #f3f4f6;
+      --text-muted: #9ba1b0;
+      --text-dim: #606573;
+      --success: #10b981;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(rgba(255, 102, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 102, 0, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* Boxy Utilities */
+    .box {
+      border: 1px solid var(--surface-border);
+      background: var(--surface);
+      border-radius: 0;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .box-orange {
+      border-color: var(--orange);
+    }
+
+    .box-shadow {
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+    }
+
+    .box-shadow-orange {
+      box-shadow: 4px 4px 0px var(--orange);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header {
+      border-bottom: 1px solid var(--surface-border);
+      background: rgba(11, 12, 14, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-badge {
+      background: var(--orange);
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 4px 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--orange);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-raised);
+      color: var(--text);
+      border: 1px solid var(--surface-border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+      box-shadow: 2px 2px 0px var(--orange);
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #000;
+      border-color: var(--orange);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-light);
+      border-color: var(--orange-light);
+      color: #000;
+      box-shadow: 3px 3px 0px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 72px 0 48px;
+    }
+
+    .hero-badge-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border: 1px solid var(--surface-border);
+      background: var(--surface);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tag-orange {
+      border-color: var(--orange);
+      background: var(--orange-subtle);
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-family: var(--font-sans);
+      font-size: clamp(38px, 5.5vw, 64px);
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: var(--orange);
+      position: relative;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .quick-install-box {
+      background: #000;
+      border: 1px solid var(--surface-border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .quick-install-box code {
+      color: var(--orange);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    /* Hero Terminal Mockup */
+    .terminal {
+      background: #08080a;
+      border: 1px solid var(--surface-border);
+      box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.9);
+      margin-bottom: 64px;
+    }
+
+    .terminal-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #333;
+      background: #18191c;
+    }
+
+    .terminal-dot.active {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .terminal-title {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .terminal-body {
+      padding: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .t-prompt {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .t-cmd {
+      color: #fff;
+    }
+
+    .t-flag {
+      color: var(--orange-light);
+    }
+
+    .t-string {
+      color: #93c5fd;
+    }
+
+    .t-out {
+      color: var(--text-muted);
+      margin-top: 4px;
+      margin-bottom: 16px;
+    }
+
+    .t-success {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .t-highlight {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    /* Section Headers */
+    .section-title-wrap {
+      margin-bottom: 36px;
+      border-left: 4px solid var(--orange);
+      padding-left: 16px;
+    }
+
+    .section-pre {
+      font-size: 12px;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-family: var(--font-sans);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-top: 4px;
+    }
+
+    /* Interactive Playground */
+    .playground-section {
+      padding: 32px 0 64px;
+    }
+
+    .playground-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .playground-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .playground-controls {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+    }
+
+    .playground-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .preset-btn {
+      text-align: left;
+      background: var(--surface-raised);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s;
+    }
+
+    .preset-btn:hover, .preset-btn.active {
+      border-color: var(--orange);
+      background: var(--orange-subtle);
+      color: #fff;
+    }
+
+    .playground-input-group {
+      margin-top: 16px;
+    }
+
+    .playground-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .playground-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .playground-input {
+      flex: 1;
+      background: #000;
+      border: 1px solid var(--surface-border);
+      color: #fff;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .playground-input:focus {
+      border-color: var(--orange);
+    }
+
+    .playground-run {
+      background: var(--orange);
+      color: #000;
+      border: none;
+      padding: 10px 18px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .playground-run:hover {
+      background: var(--orange-light);
+    }
+
+    .playground-terminal {
+      background: #000;
+      border: 1px solid var(--surface-border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 380px;
+    }
+
+    .playground-term-header {
+      font-size: 11px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .playground-term-output {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Bento Feature Cards */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+
+    @media (max-width: 900px) {
+      .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bento-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 24px;
+      position: relative;
+      transition: all 0.15s;
+    }
+
+    .bento-card:hover {
+      border-color: var(--orange);
+      transform: translateY(-2px);
+      box-shadow: 4px 4px 0px var(--orange);
+    }
+
+    .bento-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+
+    .bento-card h3 {
+      font-family: var(--font-sans);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .bento-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Architecture Visualizer */
+    .arch-box {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 32px;
+      margin-bottom: 64px;
+    }
+
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    @media (max-width: 800px) {
+      .arch-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .arch-step {
+      background: var(--surface-raised);
+      border: 1px solid var(--surface-border);
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .arch-step-badge {
+      font-size: 10px;
+      background: #000;
+      border: 1px solid var(--surface-border);
+      color: var(--orange);
+      padding: 2px 6px;
+      display: inline-block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .arch-step h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .arch-step p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Recipes / Pipelines */
+    .recipes-section {
+      margin-bottom: 64px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-bottom: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #000;
+      font-weight: 700;
+    }
+
+    .recipe-content {
+      background: #000;
+      border: 1px solid var(--surface-border);
+      padding: 24px;
+      font-size: 13px;
+    }
+
+    .recipe-pane {
+      display: none;
+    }
+
+    .recipe-pane.active {
+      display: block;
+    }
+
+    /* Command Table */
+    .cmd-table-box {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      overflow-x: auto;
+      margin-bottom: 64px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 18px;
+      color: var(--orange);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--surface-border);
+      color: var(--text-muted);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 102, 0, 0.03);
+    }
+
+    td code {
+      color: #fff;
+      background: #000;
+      padding: 2px 6px;
+      border: 1px solid var(--surface-border);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 40px 0;
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--orange);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <span class="brand-badge">HMC</span>
+        <span class="brand-title">hold_my_context</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#playground" class="nav-link">Playground</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#recipes" class="nav-link">RAG Pipelines</a>
+        <a href="#commands" class="nav-link">Commands</a>
+        <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">GitHub &nearr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge-row">
+        <span class="tag tag-orange">RUST NATIVE</span>
+        <span class="tag">EMBEDDED SQLITE</span>
+        <span class="tag">LOCAL VECTOR STORE</span>
+        <span class="tag">OLLAMA RAG READY</span>
+      </div>
+
+      <h1>
+        Persistent memory for your terminal.<br>
+        <span>Vector search</span> for AI agents.
+      </h1>
+
+      <p>
+        <code>hmc</code> is a sub-10ms CLI tool and embedded vector database written in Rust.
+        Stash conversations, debug logs, and prompts across sessions—then retrieve by exact ID or semantic meaning.
+      </p>
+
+      <div class="hero-actions">
+        <div class="quick-install-box box">
+          <span>$</span>
+          <code id="install-cmd">cargo install --git https://github.com/khokharsnehil45/hmc</code>
+          <button class="copy-btn" onclick="copyText('cargo install --git https://github.com/khokharsnehil45/hmc', this)">COPY</button>
+        </div>
+        <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">★ GitHub Repo</a>
+        <a href="#playground" class="btn btn-primary">TRY INTERACTIVE DEMO &darr;</a>
+      </div>
+
+      <!-- Hero Terminal Preview -->
+      <div class="terminal box">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot active"></span>
+            <span class="terminal-dot"></span>
+            <span class="terminal-dot"></span>
+          </div>
+          <span class="terminal-title">bash — hmc vector session</span>
+          <span style="font-size: 11px; color: var(--orange);">v0.1.0</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--save</span> <span class="t-string">"PostgreSQL GIN indexing on JSONB for sub-millisecond document queries"</span> <span class="t-flag">--vec</span></div>
+          <div class="t-out t-success">&gt; Saved context with ID: <span class="t-highlight">5937969c</span> [vector indexed]</div>
+
+          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"fast database queries on json fields"</span> <span class="t-flag">--1</span></div>
+          <div class="t-out">
+Top 1 Vector Matches for: "fast database queries on json fields"
+=================================================================
+
+[Match #1] ID: 5937969c | Similarity: 0.78
+-----------------------------------------------------------------
+PostgreSQL GIN indexing on JSONB for sub-millisecond document queries
+          </div>
+
+          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"database json"</span> <span class="t-flag">--1</span> | <span class="t-cmd">ollama run llama3.2</span> <span class="t-string">"Explain this index:"</span></div>
+          <div class="t-out" style="color: #6ee7b7;">&gt; A GIN (Generalized Inverted Index) speeds up searches on JSONB keys and values by...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Terminal Playground -->
+  <section id="playground" class="playground-section">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="section-pre">// LIVE SIMULATOR</div>
+        <h2 class="section-title">Interactive Terminal Playground</h2>
+      </div>
+
+      <div class="playground-grid">
+        <!-- Controls Column -->
+        <div class="playground-controls box">
+          <div class="playground-header">
+            <span>Select Query Preset</span>
+            <span style="font-size: 11px; color: var(--text-dim);">SQLITE + VEC SIM</span>
+          </div>
+
+          <div class="preset-list">
+            <button class="preset-btn active" onclick="runPreset('db')">
+              <span><code>hmc --query "database indexes" --3</code></span>
+              <span class="tag tag-orange">SQL</span>
+            </button>
+            <button class="preset-btn" onclick="runPreset('ai')">
+              <span><code>hmc --query "neural networks and rlhf" --5</code></span>
+              <span class="tag tag-orange">AI</span>
+            </button>
+            <button class="preset-btn" onclick="runPreset('rust')">
+              <span><code>hmc --query "borrow checker memory" --1</code></span>
+              <span class="tag tag-orange">RUST</span>
+            </button>
+            <button class="preset-btn" onclick="runPreset('food')">
+              <span><code>hmc --query "sourdough baking recipe" --2</code></span>
+              <span class="tag tag-orange">FOOD</span>
+            </button>
+          </div>
+
+          <div class="playground-input-group">
+            <label class="playground-label">Custom Query or Save Command:</label>
+            <div class="playground-input-row">
+              <input type="text" id="custom-input" class="playground-input" value='hmc --query "database performance" --3' placeholder='Type e.g. hmc --query "..." --5'>
+              <button class="playground-run" onclick="executeCustom()">RUN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Output Column -->
+        <div class="playground-terminal box">
+          <div class="playground-term-header">
+            <span>TERMINAL OUTPUT (STDOUT)</span>
+            <span id="term-status" style="color: var(--success);">&#x25CF; READY</span>
+          </div>
+          <pre id="term-output" class="playground-term-output">Select a preset above or type a command to query the vector store.</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Features -->
+  <section class="container" style="padding-bottom: 48px;">
+    <div class="section-title-wrap">
+      <div class="section-pre">// CORE CAPABILITIES</div>
+      <h2 class="section-title">Built for Terminal Power Users & Agents</h2>
+    </div>
+
+    <div class="bento-grid">
+      <div class="bento-card">
+        <div class="bento-num">01 / SPEED</div>
+        <h3>Sub-10ms Startup</h3>
+        <p>Zero Python runtimes, zero Docker daemons. Single statically linked Rust binary that starts in milliseconds and consumes virtually no memory.</p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-num">02 / STORAGE</div>
+        <h3>Normalized SQLite Engine</h3>
+        <p>Raw text lives strictly once in <code>contexts</code>. Compact binary vectors live in <code>embeddings</code>. Scans numbers in RAM, fetching text only for top-k winners.</p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-num">03 / EMBEDDINGS</div>
+        <h3>Dual-Tier Intelligence</h3>
+        <p>Leverages local Ollama (<code>nomic-embed-text</code> 768-dim) when online, with an automatic fallback to 256-dim subword feature hashing when offline.</p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-num">04 / INTERFACE</div>
+        <h3>Flexible Top-K Syntax</h3>
+        <p>Query top results intuitively with shorthand flags: <code>--1</code>, <code>--3</code>, <code>--5</code>, or <code>-k 10</code>. Formatted for high readability and pipe friendliness.</p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-num">05 / UNIX NATIVE</div>
+        <h3>Pipes & Redirection</h3>
+        <p>Fully compliant with Unix philosophy. Pipe outputs directly: <code>cat err.log | hmc --save - --vec</code> and redirect <code>hmc --query "..." &gt; context.md</code>.</p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-num">06 / PRIVACY</div>
+        <h3>100% Local & Private</h3>
+        <p>Your notes and memories never touch external APIs or cloud providers. Stored in <code>~/.hmc/hmc.db</code> with zero tracking or telemetry.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture Visualizer -->
+  <section id="architecture" class="container">
+    <div class="section-title-wrap">
+      <div class="section-pre">// SYSTEM DESIGN</div>
+      <h2 class="section-title">Normalized Two-Table Architecture</h2>
+    </div>
+
+    <div class="arch-box box">
+      <div class="arch-grid">
+        <div class="arch-step">
+          <span class="arch-step-badge">INPUT</span>
+          <h4>CLI / Stdin</h4>
+          <p>Accepts raw text or pipe: <code>hmc --save "..." --vec</code></p>
+        </div>
+
+        <div class="arch-step">
+          <span class="arch-step-badge">ENGINE</span>
+          <h4>Dual Embedder</h4>
+          <p>Ollama (768-dim) or Subword Hashing (256-dim)</p>
+        </div>
+
+        <div class="arch-step">
+          <span class="arch-step-badge">STORAGE</span>
+          <h4>SQLite (hmc.db)</h4>
+          <p><code>contexts</code> (Text) &lt;--FK--&gt; <code>embeddings</code> (BLOB)</p>
+        </div>
+
+        <div class="arch-step">
+          <span class="arch-step-badge">OUTPUT</span>
+          <h4>Vector Scan</h4>
+          <p>Scans binary float vectors, ranks cosine similarity, loads winning text.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipelines & Recipes -->
+  <section id="recipes" class="container recipes-section">
+    <div class="section-title-wrap">
+      <div class="section-pre">// RECIPES</div>
+      <h2 class="section-title">Common Terminal & AI Workflows</h2>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(0)">01. Local RAG with Ollama</button>
+      <button class="tab-btn" onclick="switchTab(1)">02. Cross-Terminal Scratchpad</button>
+      <button class="tab-btn" onclick="switchTab(2)">03. AI Agent Memory Function</button>
+    </div>
+
+    <div class="recipe-content box">
+      <!-- Tab 1 -->
+      <div class="recipe-pane active">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">Retrieve relevant knowledge from <code>hmc</code> and pipe it into a local LLM in a single terminal line:</p>
+        <pre><code style="color: #6ee7b7;"># 1. Pipe retrieved context straight to Ollama
+(echo "Based on this context, summarize the key points:"; hmc --query "artificial intelligence" --3) | ollama run llama3.2
+
+# 2. Pipe Ollama answer back into memory:
+ollama run llama3.2 "Explain Docker multi-stage builds" | hmc --save - --vec</code></pre>
+      </div>
+
+      <!-- Tab 2 -->
+      <div class="recipe-pane">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">Handoff terminal context between tabs without copy-pasting:</p>
+        <pre><code style="color: #6ee7b7;"># Tab 1: Save compilation error or server log
+cargo test 2&gt;&amp;1 | hmc --save -
+# Output: Saved context with ID: 4a7b9c1d
+
+# Tab 2: Load in another pane or remote SSH window
+hmc --load 4a7b9c1d</code></pre>
+      </div>
+
+      <!-- Tab 3 -->
+      <div class="recipe-pane">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">Add a smart recall helper function to your <code>~/.bashrc</code>:</p>
+        <pre><code style="color: #6ee7b7;">ask() {
+  local query="$1"
+  local context=$(hmc --query "$query" --3 2&gt;/dev/null)
+  
+  ollama run llama3.2 &lt;&lt;EOF
+Context from my notes:
+$context
+
+Question: $query
+EOF
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commands Table -->
+  <section id="commands" class="container">
+    <div class="section-title-wrap">
+      <div class="section-pre">// REFERENCE</div>
+      <h2 class="section-title">CLI Command Reference</h2>
+    </div>
+
+    <div class="cmd-table-box box">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>--save &lt;CONTENT&gt;</code></td>
+            <td>Save context to <code>contexts</code> table; returns 8-char ID</td>
+            <td><code>hmc --save "User preferences"</code></td>
+          </tr>
+          <tr>
+            <td><code>--vec</code></td>
+            <td>Flag to compute and index vector embedding into <code>embeddings</code> table</td>
+            <td><code>hmc --save "Note" --vec</code></td>
+          </tr>
+          <tr>
+            <td><code>--load &lt;ID&gt;</code></td>
+            <td>Retrieve raw context by full ID or prefix</td>
+            <td><code>hmc --load 5937969c</code></td>
+          </tr>
+          <tr>
+            <td><code>--query &lt;QUERY&gt;</code></td>
+            <td>Semantically search memory using cosine similarity</td>
+            <td><code>hmc --query "database optimization"</code></td>
+          </tr>
+          <tr>
+            <td><code>--&lt;K&gt; / -k &lt;K&gt;</code></td>
+            <td>Specify top K matches to return (e.g. <code>--1</code>, <code>--5</code>)</td>
+            <td><code>hmc --query "rust" --5</code></td>
+          </tr>
+          <tr>
+            <td><code>-</code></td>
+            <td>Read content from standard input (pipe support)</td>
+            <td><code>cat notes.txt | hmc --save - --vec</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        <strong style="color: var(--orange);">hmc</strong> — Hold My Context &bull; MIT / Apache 2.0
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/khokharsnehil45/hmc" target="_blank">github.com/khokharsnehil45/hmc</a>
+        <a href="#playground">Playground</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#commands">Docs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Copy helper
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.innerText;
+        btn.innerText = "COPIED!";
+        btn.style.borderColor = "var(--success)";
+        btn.style.color = "var(--success)";
+        setTimeout(() => {
+          btn.innerText = original;
+          btn.style.borderColor = "";
+          btn.style.color = "";
+        }, 1500);
+      });
+    }
+
+    // Tabs
+    function switchTab(idx) {
+      const btns = document.querySelectorAll('.tab-btn');
+      const panes = document.querySelectorAll('.recipe-pane');
+      btns.forEach((b, i) => b.classList.toggle('active', i === idx));
+      panes.forEach((p, i) => p.classList.toggle('active', i === idx));
+    }
+
+    // Interactive playground database
+    const mockDB = [
+      { id: "5937969c", content: "PostgreSQL indexing with B-Trees and GIN indexes for JSONB queries", vec: "db" },
+      { id: "db5f542b", content: "Database query optimization with execution plans and cost models", vec: "db" },
+      { id: "b2bd7dfa", content: "Understanding transformer self-attention mechanisms in LLMs", vec: "ai" },
+      { id: "56b6e936", content: "Reinforcement learning from human feedback RLHF for alignment", vec: "ai" },
+      { id: "b6e9a106", content: "Deep neural networks for image classification with ResNet", vec: "ai" },
+      { id: "80d3bceb", content: "Rust memory model, borrow checker, and zero-cost abstractions", vec: "rust" },
+      { id: "cf33090b", content: "Baking sourdough bread using levain and high hydration flour", vec: "food" },
+      { id: "bb007e25", content: "Cooking traditional Neapolitan pizza with fermented dough and San Marzano tomatoes", vec: "food" }
+    ];
+
+    function runPreset(type) {
+      const input = document.getElementById('custom-input');
+      const btns = document.querySelectorAll('.preset-btn');
+      btns.forEach(b => b.classList.remove('active'));
+
+      if (type === 'db') {
+        input.value = 'hmc --query "database indexes" --3';
+      } else if (type === 'ai') {
+        input.value = 'hmc --query "neural networks and rlhf" --5';
+      } else if (type === 'rust') {
+        input.value = 'hmc --query "borrow checker memory" --1';
+      } else if (type === 'food') {
+        input.value = 'hmc --query "sourdough baking recipe" --2';
+      }
+      executeCustom();
+    }
+
+    function executeCustom() {
+      const input = document.getElementById('custom-input').value.trim();
+      const output = document.getElementById('term-output');
+      const status = document.getElementById('term-status');
+
+      status.innerHTML = `<span style="color: var(--orange)">&#x25CF; EXECUTING...</span>`;
+
+      setTimeout(() => {
+        status.innerHTML = `<span style="color: var(--success)">&#x25CF; SUCCESS (6ms)</span>`;
+
+        if (input.includes('--save')) {
+          const match = input.match(/--save\s+["']?([^"']+)["']?/);
+          const text = match ? match[1] : "Custom context note";
+          const newId = Math.random().toString(16).substring(2, 10);
+          mockDB.unshift({ id: newId, content: text, vec: "custom" });
+          output.innerText = `> Saved context with ID: ${newId} [vector indexed]\nDatabase: ~/.hmc/hmc.db updated (contexts + embeddings).`;
+          return;
+        }
+
+        if (input.includes('--load')) {
+          const match = input.match(/--load\s+([a-f0-9]+)/i);
+          const id = match ? match[1] : "";
+          const found = mockDB.find(item => item.id.startsWith(id));
+          if (found) {
+            output.innerText = found.content;
+          } else {
+            output.innerText = `Error: No context found with ID matching '${id}'`;
+          }
+          return;
+        }
+
+        // Query execution
+        const queryMatch = input.match(/--query\s+["']?([^"']+)["']?/);
+        const query = queryMatch ? queryMatch[1] : "database";
+        const topMatch = input.match(/--(\d+)/) || input.match(/-k\s+(\d+)/);
+        const k = topMatch ? parseInt(topMatch[1], 10) : 3;
+
+        // Rank by simple token match simulation
+        const scored = mockDB.map(item => {
+          let score = 0.35 + Math.random() * 0.1;
+          const qWords = query.toLowerCase().split(/\s+/);
+          for (let w of qWords) {
+            if (item.content.toLowerCase().includes(w)) score += 0.25;
+            if (item.vec.toLowerCase().includes(w)) score += 0.2;
+          }
+          score = Math.min(0.96, score);
+          return { ...item, score };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+        const winners = scored.slice(0, k);
+
+        let res = `Top ${winners.length} Vector Matches for: "${query}"\n` + "=".repeat(65) + "\n";
+        winners.forEach((item, idx) => {
+          res += `\n[Match #${idx + 1}] ID: ${item.id} | Similarity: ${item.score.toFixed(2)}\n`;
+          res += "-".repeat(65) + "\n";
+          res += item.content + "\n";
+        });
+
+        output.innerText = res;
+      }, 150);
+    }
+
+    // Run initial preset
+    runPreset('db');
+  </script>
+</body>
+</html>
