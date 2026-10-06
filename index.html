@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>hmc — Hold My Context | Fast Local Vector Store & Agent Memory CLI</title>
   <meta name="description" content="Hold My Context (hmc): Ultra-fast, local-first CLI tool and SQLite vector store written in Rust. Persistent scratchpad and long-term memory for terminal workflows and AI agents.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,6 +31,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -73,6 +74,12 @@
       padding: 0 24px;
     }
 
+    @media (max-width: 640px) {
+      .container {
+        padding: 0 16px;
+      }
+    }
+
     /* Navigation */
     header {
       border-bottom: 1px solid var(--surface-border);
@@ -87,22 +94,24 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 64px;
+      min-height: 64px;
+      gap: 16px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       color: var(--text);
+      flex-shrink: 0;
     }
 
     .brand-badge {
       background: var(--orange);
       color: #000;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
       padding: 4px 8px;
       letter-spacing: 0.5px;
     }
@@ -110,20 +119,29 @@
     .brand-title {
       font-family: var(--font-sans);
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
       letter-spacing: -0.5px;
     }
 
     .nav-links {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
     }
 
     .nav-link {
       color: var(--text-muted);
       text-decoration: none;
       font-size: 13px;
+      white-space: nowrap;
       transition: color 0.15s;
     }
 
@@ -131,20 +149,42 @@
       color: var(--orange);
     }
 
+    @media (max-width: 720px) {
+      .nav-inner {
+        flex-wrap: wrap;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        height: auto;
+      }
+      .nav-links {
+        width: 100%;
+        justify-content: flex-start;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 8px;
+        gap: 14px;
+      }
+      .brand-title {
+        font-size: 15px;
+      }
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       background: var(--surface-raised);
       color: var(--text);
       border: 1px solid var(--surface-border);
-      padding: 8px 16px;
+      padding: 10px 18px;
       font-family: var(--font-mono);
       font-size: 13px;
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
+      min-height: 42px;
       transition: all 0.15s;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -169,13 +209,13 @@
 
     /* Hero Section */
     .hero {
-      padding: 72px 0 48px;
+      padding: clamp(40px, 8vw, 80px) 0 40px;
     }
 
     .hero-badge-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
 
@@ -198,11 +238,12 @@
 
     .hero h1 {
       font-family: var(--font-sans);
-      font-size: clamp(38px, 5.5vw, 64px);
-      line-height: 1.05;
+      font-size: clamp(30px, 5.5vw, 60px);
+      line-height: 1.1;
       font-weight: 700;
-      letter-spacing: -1.5px;
+      letter-spacing: -1px;
       margin-bottom: 20px;
+      word-break: break-word;
     }
 
     .hero h1 span {
@@ -211,7 +252,7 @@
     }
 
     .hero p {
-      font-size: 16px;
+      font-size: clamp(14px, 2vw, 16px);
       color: var(--text-muted);
       max-width: 680px;
       margin-bottom: 32px;
@@ -220,20 +261,33 @@
 
     .hero-actions {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       align-items: center;
       flex-wrap: wrap;
-      margin-bottom: 48px;
+      margin-bottom: 40px;
     }
 
     .quick-install-box {
       background: #000;
       border: 1px solid var(--surface-border);
-      padding: 10px 16px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 13px;
+      font-size: 12px;
+      max-width: 100%;
+      min-height: 42px;
+    }
+
+    .install-code-wrap {
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .install-code-wrap::-webkit-scrollbar {
+      display: none;
     }
 
     .quick-install-box code {
@@ -244,10 +298,12 @@
       background: transparent;
       border: 1px solid var(--surface-border);
       color: var(--text-muted);
-      padding: 4px 8px;
+      padding: 6px 10px;
       font-family: var(--font-mono);
       font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
+      flex-shrink: 0;
       transition: all 0.15s;
     }
 
@@ -256,12 +312,27 @@
       color: var(--orange);
     }
 
+    @media (max-width: 640px) {
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .quick-install-box {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .btn {
+        width: 100%;
+      }
+    }
+
     /* Hero Terminal Mockup */
     .terminal {
       background: #08080a;
       border: 1px solid var(--surface-border);
       box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.9);
       margin-bottom: 64px;
+      max-width: 100%;
     }
 
     .terminal-header {
@@ -271,6 +342,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .terminal-dots {
@@ -296,10 +369,12 @@
     }
 
     .terminal-body {
-      padding: 20px;
-      font-size: 13px;
+      padding: clamp(14px, 3vw, 20px);
+      font-size: clamp(11px, 2.7vw, 13px);
       line-height: 1.6;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre;
     }
 
     .t-prompt {
@@ -337,13 +412,13 @@
 
     /* Section Headers */
     .section-title-wrap {
-      margin-bottom: 36px;
+      margin-bottom: 32px;
       border-left: 4px solid var(--orange);
-      padding-left: 16px;
+      padding-left: 14px;
     }
 
     .section-pre {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--orange);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -352,7 +427,7 @@
 
     .section-title {
       font-family: var(--font-sans);
-      font-size: 28px;
+      font-size: clamp(22px, 4vw, 30px);
       font-weight: 700;
       letter-spacing: -0.5px;
       margin-top: 4px;
@@ -366,7 +441,7 @@
       margin-bottom: 64px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .bento-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -381,7 +456,7 @@
     .bento-card {
       background: var(--surface);
       border: 1px solid var(--surface-border);
-      padding: 24px;
+      padding: clamp(18px, 3vw, 24px);
       position: relative;
       transition: all 0.15s;
     }
@@ -393,17 +468,17 @@
     }
 
     .bento-num {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--orange);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .bento-card h3 {
       font-family: var(--font-sans);
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       color: #fff;
     }
 
@@ -417,18 +492,23 @@
     .arch-box {
       background: var(--surface);
       border: 1px solid var(--surface-border);
-      padding: 32px;
+      padding: clamp(20px, 4vw, 32px);
       margin-bottom: 64px;
     }
 
     .arch-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      position: relative;
+      gap: 14px;
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 960px) {
+      .arch-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 540px) {
       .arch-grid {
         grid-template-columns: 1fr;
       }
@@ -437,8 +517,8 @@
     .arch-step {
       background: var(--surface-raised);
       border: 1px solid var(--surface-border);
-      padding: 20px;
-      text-align: center;
+      padding: 18px;
+      text-align: left;
       position: relative;
     }
 
@@ -449,7 +529,7 @@
       color: var(--orange);
       padding: 2px 6px;
       display: inline-block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 700;
     }
 
@@ -457,11 +537,13 @@
       font-size: 14px;
       font-weight: 700;
       margin-bottom: 6px;
+      color: #fff;
     }
 
     .arch-step p {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
+      line-height: 1.5;
     }
 
     /* Recipes / Pipelines */
@@ -471,10 +553,17 @@
 
     .tabs {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       border-bottom: 1px solid var(--surface-border);
       margin-bottom: 16px;
-      flex-wrap: wrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .tab-btn {
@@ -482,11 +571,13 @@
       border: 1px solid var(--surface-border);
       border-bottom: none;
       color: var(--text-muted);
-      padding: 8px 16px;
+      padding: 10px 16px;
       font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
+      min-height: 40px;
       transition: all 0.15s;
     }
 
@@ -500,8 +591,10 @@
     .recipe-content {
       background: #000;
       border: 1px solid var(--surface-border);
-      padding: 24px;
-      font-size: 13px;
+      padding: clamp(16px, 3vw, 24px);
+      font-size: clamp(12px, 2.7vw, 13px);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .recipe-pane {
@@ -512,16 +605,24 @@
       display: block;
     }
 
+    .recipe-pane pre {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-top: 6px;
+    }
+
     /* Command Table */
     .cmd-table-box {
       background: var(--surface);
       border: 1px solid var(--surface-border);
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       margin-bottom: 64px;
     }
 
     table {
       width: 100%;
+      min-width: 580px;
       border-collapse: collapse;
       text-align: left;
       font-size: 13px;
@@ -530,16 +631,16 @@
     th {
       background: var(--surface-raised);
       border-bottom: 1px solid var(--surface-border);
-      padding: 14px 18px;
+      padding: 12px 16px;
       color: var(--orange);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     td {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--surface-border);
       color: var(--text-muted);
     }
@@ -557,12 +658,13 @@
       background: #000;
       padding: 2px 6px;
       border: 1px solid var(--surface-border);
+      white-space: nowrap;
     }
 
     /* Footer */
     footer {
       border-top: 1px solid var(--surface-border);
-      padding: 40px 0;
+      padding: 36px 0;
       background: var(--surface);
       font-size: 12px;
       color: var(--text-dim);
@@ -578,16 +680,25 @@
 
     .footer-links {
       display: flex;
-      gap: 20px;
+      gap: 18px;
+      flex-wrap: wrap;
     }
 
     .footer-links a {
       color: var(--text-muted);
       text-decoration: none;
+      transition: color 0.15s;
     }
 
     .footer-links a:hover {
       color: var(--orange);
+    }
+
+    @media (max-width: 600px) {
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -605,7 +716,7 @@
         <a href="#architecture" class="nav-link">Architecture</a>
         <a href="#recipes" class="nav-link">RAG Pipelines</a>
         <a href="#commands" class="nav-link">Commands</a>
-        <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">GitHub &nearr;</a>
+        <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn" style="padding: 6px 12px; min-height: 32px;">GitHub &nearr;</a>
       </nav>
     </div>
   </header>
@@ -626,14 +737,16 @@
       </h1>
 
       <p>
-        <code>hmc</code> is a sub-10ms CLI tool and embedded vector database written in Rust.
+        <code>hmc</code> is an ultra-fast CLI tool and embedded vector database written in Rust.
         Stash conversations, debug logs, and prompts across sessions—then retrieve by exact ID or semantic meaning.
       </p>
 
       <div class="hero-actions">
         <div class="quick-install-box box">
-          <span>$</span>
-          <code id="install-cmd">cargo install --git https://github.com/khokharsnehil45/hmc</code>
+          <span style="color: var(--text-dim);">$</span>
+          <div class="install-code-wrap">
+            <code id="install-cmd">cargo install --git https://github.com/khokharsnehil45/hmc</code>
+          </div>
           <button class="copy-btn" onclick="copyText('cargo install --git https://github.com/khokharsnehil45/hmc', this)">COPY</button>
         </div>
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">★ GitHub Repo</a>
@@ -652,21 +765,19 @@
           <span style="font-size: 11px; color: var(--orange);">v0.1.0</span>
         </div>
         <div class="terminal-body">
-          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--save</span> <span class="t-string">"PostgreSQL GIN indexing on JSONB for sub-millisecond document queries"</span> <span class="t-flag">--vec</span></div>
-          <div class="t-out t-success">&gt; Saved context with ID: <span class="t-highlight">5937969c</span> [vector indexed]</div>
+<span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--save</span> <span class="t-string">"PostgreSQL GIN indexing on JSONB for sub-millisecond document queries"</span> <span class="t-flag">--vec</span>
+<span class="t-out t-success">&gt; Saved context with ID: <span class="t-highlight">5937969c</span> [vector indexed]</span>
 
-          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"fast database queries on json fields"</span> <span class="t-flag">--1</span></div>
-          <div class="t-out">
-Top 1 Vector Matches for: "fast database queries on json fields"
+<span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"fast database queries on json fields"</span> <span class="t-flag">--1</span>
+<span class="t-out">Top 1 Vector Matches for: "fast database queries on json fields"
 =================================================================
 
 [Match #1] ID: 5937969c | Similarity: 0.78
 -----------------------------------------------------------------
-PostgreSQL GIN indexing on JSONB for sub-millisecond document queries
-          </div>
+PostgreSQL GIN indexing on JSONB for sub-millisecond document queries</span>
 
-          <div><span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"database json"</span> <span class="t-flag">--1</span> | <span class="t-cmd">ollama run llama3.2</span> <span class="t-string">"Explain this index:"</span></div>
-          <div class="t-out" style="color: #6ee7b7;">&gt; A GIN (Generalized Inverted Index) speeds up searches on JSONB keys and values by...</div>
+<span class="t-prompt">kevin@arch:~$</span> <span class="t-cmd">hmc</span> <span class="t-flag">--query</span> <span class="t-string">"database json"</span> <span class="t-flag">--1</span> | <span class="t-cmd">ollama run llama3.2</span> <span class="t-string">"Explain this index:"</span>
+<span class="t-out" style="color: #6ee7b7;">&gt; A GIN (Generalized Inverted Index) speeds up searches on JSONB keys and values by...</span>
         </div>
       </div>
     </div>
@@ -728,26 +839,26 @@ PostgreSQL GIN indexing on JSONB for sub-millisecond document queries
     <div class="arch-box box">
       <div class="arch-grid">
         <div class="arch-step">
-          <span class="arch-step-badge">INPUT</span>
+          <span class="arch-step-badge">STEP 01</span>
           <h4>CLI / Stdin</h4>
-          <p>Accepts raw text or pipe: <code>hmc --save "..." --vec</code></p>
+          <p>Accepts raw text or pipes: <code>hmc --save "..." --vec</code></p>
         </div>
 
         <div class="arch-step">
-          <span class="arch-step-badge">ENGINE</span>
+          <span class="arch-step-badge">STEP 02</span>
           <h4>Dual Embedder</h4>
-          <p>Ollama (768-dim) or Subword Hashing (256-dim)</p>
+          <p>Ollama (768-dim) or Subword Hashing (256-dim fallback)</p>
         </div>
 
         <div class="arch-step">
-          <span class="arch-step-badge">STORAGE</span>
+          <span class="arch-step-badge">STEP 03</span>
           <h4>SQLite (hmc.db)</h4>
           <p><code>contexts</code> (Text) &lt;--FK--&gt; <code>embeddings</code> (BLOB)</p>
         </div>
 
         <div class="arch-step">
-          <span class="arch-step-badge">OUTPUT</span>
-          <h4>Vector Scan</h4>
+          <span class="arch-step-badge">STEP 04</span>
+          <h4>Top-K Vector Scan</h4>
           <p>Scans binary float vectors, ranks cosine similarity, loads winning text.</p>
         </div>
       </div>
@@ -875,7 +986,6 @@ EOF
   </footer>
 
   <script>
-    // Copy helper
     function copyText(text, btn) {
       navigator.clipboard.writeText(text).then(() => {
         const original = btn.innerText;
@@ -890,7 +1000,6 @@ EOF
       });
     }
 
-    // Tabs
     function switchTab(idx) {
       const btns = document.querySelectorAll('.tab-btn');
       const panes = document.querySelectorAll('.recipe-pane');
