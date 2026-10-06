@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>hmc — Hold My Context | Fast Local Vector Store & Agent Memory CLI</title>
-  <meta name="description" content="Hold My Context (hmc): Ultra-fast, local-first CLI tool and vector store written in Rust. Persistent scratchpad and long-term memory for terminal workflows and AI agents.">
+  <meta name="description" content="Hold My Context (hmc): Ultra-fast, local-first CLI tool and SQLite vector store written in Rust. Persistent scratchpad and long-term memory for terminal workflows and AI agents.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -358,142 +358,6 @@
       margin-top: 4px;
     }
 
-    /* Interactive Playground */
-    .playground-section {
-      padding: 32px 0 64px;
-    }
-
-    .playground-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 860px) {
-      .playground-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .playground-controls {
-      padding: 24px;
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-    }
-
-    .playground-header {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--orange);
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .preset-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .preset-btn {
-      text-align: left;
-      background: var(--surface-raised);
-      border: 1px solid var(--surface-border);
-      color: var(--text);
-      padding: 10px 14px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: all 0.15s;
-    }
-
-    .preset-btn:hover, .preset-btn.active {
-      border-color: var(--orange);
-      background: var(--orange-subtle);
-      color: #fff;
-    }
-
-    .playground-input-group {
-      margin-top: 16px;
-    }
-
-    .playground-label {
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .playground-input-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .playground-input {
-      flex: 1;
-      background: #000;
-      border: 1px solid var(--surface-border);
-      color: #fff;
-      padding: 10px 12px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      outline: none;
-    }
-
-    .playground-input:focus {
-      border-color: var(--orange);
-    }
-
-    .playground-run {
-      background: var(--orange);
-      color: #000;
-      border: none;
-      padding: 10px 18px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .playground-run:hover {
-      background: var(--orange-light);
-    }
-
-    .playground-terminal {
-      background: #000;
-      border: 1px solid var(--surface-border);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-height: 380px;
-    }
-
-    .playground-term-header {
-      font-size: 11px;
-      color: var(--text-dim);
-      border-bottom: 1px solid var(--surface-border);
-      padding-bottom: 10px;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .playground-term-output {
-      flex: 1;
-      overflow-y: auto;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
     /* Bento Feature Cards */
     .bento-grid {
       display: grid;
@@ -737,7 +601,7 @@
         <span class="brand-title">hold_my_context</span>
       </a>
       <nav class="nav-links">
-        <a href="#playground" class="nav-link">Playground</a>
+        <a href="#features" class="nav-link">Features</a>
         <a href="#architecture" class="nav-link">Architecture</a>
         <a href="#recipes" class="nav-link">RAG Pipelines</a>
         <a href="#commands" class="nav-link">Commands</a>
@@ -773,7 +637,7 @@
           <button class="copy-btn" onclick="copyText('cargo install --git https://github.com/khokharsnehil45/hmc', this)">COPY</button>
         </div>
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank" class="btn">★ GitHub Repo</a>
-        <a href="#playground" class="btn btn-primary">TRY INTERACTIVE DEMO &darr;</a>
+        <a href="#features" class="btn btn-primary">EXPLORE FEATURES &darr;</a>
       </div>
 
       <!-- Hero Terminal Preview -->
@@ -808,64 +672,8 @@ PostgreSQL GIN indexing on JSONB for sub-millisecond document queries
     </div>
   </section>
 
-  <!-- Interactive Terminal Playground -->
-  <section id="playground" class="playground-section">
-    <div class="container">
-      <div class="section-title-wrap">
-        <div class="section-pre">// LIVE SIMULATOR</div>
-        <h2 class="section-title">Interactive Terminal Playground</h2>
-      </div>
-
-      <div class="playground-grid">
-        <!-- Controls Column -->
-        <div class="playground-controls box">
-          <div class="playground-header">
-            <span>Select Query Preset</span>
-            <span style="font-size: 11px; color: var(--text-dim);">SQLITE + VEC SIM</span>
-          </div>
-
-          <div class="preset-list">
-            <button class="preset-btn active" onclick="runPreset('db')">
-              <span><code>hmc --query "database indexes" --3</code></span>
-              <span class="tag tag-orange">SQL</span>
-            </button>
-            <button class="preset-btn" onclick="runPreset('ai')">
-              <span><code>hmc --query "neural networks and rlhf" --5</code></span>
-              <span class="tag tag-orange">AI</span>
-            </button>
-            <button class="preset-btn" onclick="runPreset('rust')">
-              <span><code>hmc --query "borrow checker memory" --1</code></span>
-              <span class="tag tag-orange">RUST</span>
-            </button>
-            <button class="preset-btn" onclick="runPreset('food')">
-              <span><code>hmc --query "sourdough baking recipe" --2</code></span>
-              <span class="tag tag-orange">FOOD</span>
-            </button>
-          </div>
-
-          <div class="playground-input-group">
-            <label class="playground-label">Custom Query or Save Command:</label>
-            <div class="playground-input-row">
-              <input type="text" id="custom-input" class="playground-input" value='hmc --query "database performance" --3' placeholder='Type e.g. hmc --query "..." --5'>
-              <button class="playground-run" onclick="executeCustom()">RUN</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Terminal Output Column -->
-        <div class="playground-terminal box">
-          <div class="playground-term-header">
-            <span>TERMINAL OUTPUT (STDOUT)</span>
-            <span id="term-status" style="color: var(--success);">&#x25CF; READY</span>
-          </div>
-          <pre id="term-output" class="playground-term-output">Select a preset above or type a command to query the vector store.</pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Bento Features -->
-  <section class="container" style="padding-bottom: 48px;">
+  <section id="features" class="container" style="padding-bottom: 48px;">
     <div class="section-title-wrap">
       <div class="section-pre">// CORE CAPABILITIES</div>
       <h2 class="section-title">Built for Terminal Power Users & Agents</h2>
@@ -1059,7 +867,7 @@ EOF
       </div>
       <div class="footer-links">
         <a href="https://github.com/khokharsnehil45/hmc" target="_blank">github.com/khokharsnehil45/hmc</a>
-        <a href="#playground">Playground</a>
+        <a href="#features">Features</a>
         <a href="#architecture">Architecture</a>
         <a href="#commands">Docs</a>
       </div>
@@ -1089,101 +897,6 @@ EOF
       btns.forEach((b, i) => b.classList.toggle('active', i === idx));
       panes.forEach((p, i) => p.classList.toggle('active', i === idx));
     }
-
-    // Interactive playground database
-    const mockDB = [
-      { id: "5937969c", content: "PostgreSQL indexing with B-Trees and GIN indexes for JSONB queries", vec: "db" },
-      { id: "db5f542b", content: "Database query optimization with execution plans and cost models", vec: "db" },
-      { id: "b2bd7dfa", content: "Understanding transformer self-attention mechanisms in LLMs", vec: "ai" },
-      { id: "56b6e936", content: "Reinforcement learning from human feedback RLHF for alignment", vec: "ai" },
-      { id: "b6e9a106", content: "Deep neural networks for image classification with ResNet", vec: "ai" },
-      { id: "80d3bceb", content: "Rust memory model, borrow checker, and zero-cost abstractions", vec: "rust" },
-      { id: "cf33090b", content: "Baking sourdough bread using levain and high hydration flour", vec: "food" },
-      { id: "bb007e25", content: "Cooking traditional Neapolitan pizza with fermented dough and San Marzano tomatoes", vec: "food" }
-    ];
-
-    function runPreset(type) {
-      const input = document.getElementById('custom-input');
-      const btns = document.querySelectorAll('.preset-btn');
-      btns.forEach(b => b.classList.remove('active'));
-
-      if (type === 'db') {
-        input.value = 'hmc --query "database indexes" --3';
-      } else if (type === 'ai') {
-        input.value = 'hmc --query "neural networks and rlhf" --5';
-      } else if (type === 'rust') {
-        input.value = 'hmc --query "borrow checker memory" --1';
-      } else if (type === 'food') {
-        input.value = 'hmc --query "sourdough baking recipe" --2';
-      }
-      executeCustom();
-    }
-
-    function executeCustom() {
-      const input = document.getElementById('custom-input').value.trim();
-      const output = document.getElementById('term-output');
-      const status = document.getElementById('term-status');
-
-      status.innerHTML = `<span style="color: var(--orange)">&#x25CF; EXECUTING...</span>`;
-
-      setTimeout(() => {
-        status.innerHTML = `<span style="color: var(--success)">&#x25CF; SUCCESS (6ms)</span>`;
-
-        if (input.includes('--save')) {
-          const match = input.match(/--save\s+["']?([^"']+)["']?/);
-          const text = match ? match[1] : "Custom context note";
-          const newId = Math.random().toString(16).substring(2, 10);
-          mockDB.unshift({ id: newId, content: text, vec: "custom" });
-          output.innerText = `> Saved context with ID: ${newId} [vector indexed]\nDatabase: ~/.hmc/hmc.db updated (contexts + embeddings).`;
-          return;
-        }
-
-        if (input.includes('--load')) {
-          const match = input.match(/--load\s+([a-f0-9]+)/i);
-          const id = match ? match[1] : "";
-          const found = mockDB.find(item => item.id.startsWith(id));
-          if (found) {
-            output.innerText = found.content;
-          } else {
-            output.innerText = `Error: No context found with ID matching '${id}'`;
-          }
-          return;
-        }
-
-        // Query execution
-        const queryMatch = input.match(/--query\s+["']?([^"']+)["']?/);
-        const query = queryMatch ? queryMatch[1] : "database";
-        const topMatch = input.match(/--(\d+)/) || input.match(/-k\s+(\d+)/);
-        const k = topMatch ? parseInt(topMatch[1], 10) : 3;
-
-        // Rank by simple token match simulation
-        const scored = mockDB.map(item => {
-          let score = 0.35 + Math.random() * 0.1;
-          const qWords = query.toLowerCase().split(/\s+/);
-          for (let w of qWords) {
-            if (item.content.toLowerCase().includes(w)) score += 0.25;
-            if (item.vec.toLowerCase().includes(w)) score += 0.2;
-          }
-          score = Math.min(0.96, score);
-          return { ...item, score };
-        });
-
-        scored.sort((a, b) => b.score - a.score);
-        const winners = scored.slice(0, k);
-
-        let res = `Top ${winners.length} Vector Matches for: "${query}"\n` + "=".repeat(65) + "\n";
-        winners.forEach((item, idx) => {
-          res += `\n[Match #${idx + 1}] ID: ${item.id} | Similarity: ${item.score.toFixed(2)}\n`;
-          res += "-".repeat(65) + "\n";
-          res += item.content + "\n";
-        });
-
-        output.innerText = res;
-      }, 150);
-    }
-
-    // Run initial preset
-    runPreset('db');
   </script>
 </body>
 </html>
